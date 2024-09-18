@@ -31,6 +31,7 @@ Before you begin, ensure you have met the following requirements:
 
 ## Usage
 
+### From Command Line
 To use the YOLOv8 Auto-Annotation tool, follow these steps:
 
 1. Prepare your YOLOv8 model (.pt file)
@@ -40,6 +41,17 @@ To use the YOLOv8 Auto-Annotation tool, follow these steps:
 ```
 python auto_annotate.py --model path/to/your/model.pt --input path/to/image/folder --output path/to/output/folder --conf 0.3
 ```
+### from tkinter GUI
+To use the YOLOv8 Auto-Annotation tool from tkinter , follow these steps:
+
+1. Prepare your YOLOv8 model (.pt file)
+2. Organize your images in a single folder
+3. Run the script with the following command:
+
+```
+python auto_annotate_tkinter.py
+```
+
 
 ### Command-line Arguments
 
