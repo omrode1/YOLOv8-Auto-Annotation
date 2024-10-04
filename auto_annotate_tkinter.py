@@ -65,50 +65,62 @@ class AutoAnnotateGUI:
         if not all([self.model_path.get(), self.input_folder.get(), self.output_folder.get()]):
             self.status_label.config(text="Please fill in all fields.")
             return
-
+        
+        # Updating UI before starting the thread
+        self.status_label.config(text="Starting annotation...")
+        
         # Start annotation in a separate thread
         threading.Thread(target=self.run_annotation, daemon=True).start()
+        print("Annotation started!")
 
     def run_annotation(self):
-        model = YOLO(self.model_path.get())
-        input_folder = self.input_folder.get()
-        output_folder = self.output_folder.get()
-        conf_threshold = self.conf_threshold.get()
+        try:
+            # Load the YOLOv8 model
+            model = YOLO(self.model_path.get())
+            input_folder = self.input_folder.get()
+            output_folder = self.output_folder.get()
+            conf_threshold = self.conf_threshold.get()
 
-        os.makedirs(output_folder, exist_ok=True)
+            os.makedirs(output_folder, exist_ok=True)
 
-        image_files = [f for f in os.listdir(input_folder) if f.endswith(('.png', '.jpg', '.jpeg'))]
-        total_files = len(image_files)
+            image_files = [f for f in os.listdir(input_folder) if f.endswith(('.png', '.jpg', '.jpeg'))]
+            total_files = len(image_files)
 
-        self.progress['value'] = 0
-        self.progress['maximum'] = total_files
+            # Set progress bar maximum
+            self.progress['value'] = 0
+            self.progress['maximum'] = total_files
 
-        for i, filename in enumerate(image_files):
-            image_path = os.path.join(input_folder, filename)
-            
-            # Perform inference
-            results = model(image_path, conf=conf_threshold)[0]
-            
-            # Create annotation file
-            base_name = os.path.splitext(filename)[0]
-            annotation_path = os.path.join(output_folder, f"{base_name}.txt")
-            
-            # Get image dimensions
-            with Image.open(image_path) as img:
-                img_width, img_height = img.size
-            
-            # Write annotations
-            with open(annotation_path, 'w') as f:
-                for box in results.boxes:
-                    class_id = int(box.cls)
-                    x, y, w, h = box.xywhn[0]
-                    f.write(f"{class_id} {x} {y} {w} {h}\n")
-            
-            self.progress['value'] = i + 1
-            self.status_label.config(text=f"Processed {i+1}/{total_files}: {filename}")
-            self.master.update_idletasks()
+            for i, filename in enumerate(image_files):
+                image_path = os.path.join(input_folder, filename)
+                
+                # Perform inference
+                results = model(image_path, conf=conf_threshold)[0]
+                
+                # Create annotation file
+                base_name = os.path.splitext(filename)[0]
+                annotation_path = os.path.join(output_folder, f"{base_name}.txt")
+                
+                # Get image dimensions
+                with Image.open(image_path) as img:
+                    img_width, img_height = img.size
+                
+                # Write annotations
+                with open(annotation_path, 'w') as f:
+                    for box in results.boxes:
+                        class_id = int(box.cls)
+                        x, y, w, h = box.xywhn[0]
+                        f.write(f"{class_id} {x} {y} {w} {h}\n")
+                
+                # Update progress bar
+                self.progress['value'] = i + 1
+                self.status_label.config(text=f"Processed {i+1}/{total_files}: {filename}")
+                self.master.update_idletasks()
 
-        self.status_label.config(text="Annotation completed!")
+            self.status_label.config(text="Annotation completed!")
+        
+        except Exception as e:
+            self.status_label.config(text=f"Error: {str(e)}")
+            print(f"Error: {str(e)}")
 
 if __name__ == "__main__":
     root = tk.Tk()
